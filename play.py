@@ -79,7 +79,7 @@ player.make_guess("scissors")
 prv_name = "cameron"
 
 while True:
-    cur_name = generate_random_string(20)
+    cur_name = generate_random_string(8)
     guess = f"a god named {cur_name} who defeats a god named {prv_name}"
     if not player.make_guess(guess):
         break

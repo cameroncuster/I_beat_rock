@@ -1,7 +1,5 @@
 import json
 import uuid
-import string
-import random
 import requests
 
 
@@ -16,6 +14,9 @@ class GraniteGladiator:
         self.gid = str(uuid.uuid4())
         self.prev = "rock"
         self.score = 0
+
+    def __del__(self):
+        self.log_file.close()
 
     def save_score(self, guess):
         print(f"score: {self.score}")
@@ -57,18 +58,27 @@ class GraniteGladiator:
                 self.prev = guess
                 return True
             else:
-                self.save_score(guess)
                 return False
         else:
             print(f"guess status code: {response.status_code}")
             print(f"guess error: {response.text}")
-            self.save_score(guess)
             return False
 
 
-def generate_random_string(length):
-    letters = string.ascii_letters
-    return "".join(random.choice(letters) for _ in range(length))
+def int_to_base26(value):
+    chars = "abcdefghijklmnopqrstuvwxyz"
+
+    if value == 0:
+        return chars[0]
+
+    base26_str = ""
+    base = len(chars)
+
+    while value > 0:
+        value, remainder = divmod(value, base)
+        base26_str = chars[remainder] + base26_str
+
+    return base26_str
 
 
 player = GraniteGladiator()
@@ -76,11 +86,18 @@ player = GraniteGladiator()
 player.make_guess("paper")
 player.make_guess("scissors")
 
-prv_name = "cameron"
+prv_name = 0
+guess = ""
 
-while True:
-    cur_name = generate_random_string(8)
-    guess = f"a god named {cur_name} who defeats a god named {prv_name}"
-    if not player.make_guess(guess):
-        break
-    prv_name = cur_name
+try:
+    while True:
+        cur_name = prv_name + 1
+        guess = f"a God named '{int_to_base26(cur_name)}' who defeats a God named '{int_to_base26(prv_name)}'"
+        if not player.make_guess(guess):
+            break
+        prv_name = cur_name
+except KeyboardInterrupt:
+    print("interrupted...")
+
+player.save_score(guess)
+

@@ -1,6 +1,7 @@
 import json
 import uuid
 import requests
+import random
 
 
 class GraniteGladiator:
@@ -56,6 +57,7 @@ class GraniteGladiator:
             if response.json().get("data").get("guess_wins"):
                 self.score += 1
                 self.prev = guess
+                player.save_score(guess)
                 return True
             else:
                 return False
@@ -80,24 +82,35 @@ def int_to_base26(value):
 
     return base26_str
 
+bad_guesses = {"cd", "mf"}
 
-player = GraniteGladiator()
+while True:
+    player = GraniteGladiator()
 
-player.make_guess("paper")
-player.make_guess("scissors")
+    player.make_guess("paper")
+    player.make_guess("scissors")
 
-prv_name = 0
-guess = ""
+    prv_name = 0
+    guess = ""
+    cur_name = 0
 
-try:
-    while True:
-        cur_name = prv_name + 1
-        guess = f"a God named '{int_to_base26(cur_name)}' who defeats a God named '{int_to_base26(prv_name)}'"
-        if not player.make_guess(guess):
-            break
-        prv_name = cur_name
-except KeyboardInterrupt:
-    print("interrupted...")
+    try:
+        while True:
+            inc = random.randint(1, 3)
+            while int_to_base26(prv_name + inc) in bad_guesses:
+                inc += 1
+            cur_name = prv_name + inc
+            guess = f"a God named '{int_to_base26(cur_name)}' who defeats a God named '{int_to_base26(prv_name)}'"
+            if not player.make_guess(guess):
+                break
+            prv_name = cur_name
+    except KeyboardInterrupt:
+        print("interrupted...")
 
-player.save_score(guess)
+    print(f"losing guess: {guess}")
+    player.save_score(guess)
+
+    bad_guesses.add(int_to_base26(cur_name))
+    with open("bad_guesses.txt", "w") as f:
+        f.write("\n".join(bad_guesses))
 

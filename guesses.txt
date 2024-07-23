@@ -1,7 +1,6 @@
 paper
 scissors
-a god named PfgJxzxyforFYbDGlhOBpZokmXeiTa who defeats a god named cameron
-a god named cyyOGEQzmGrkzcBpHWumUTWJQLBXpE who defeats a god named PfgJxzxyforFYbDGlhOBpZokmXeiTa
-a god named oqWIPTIjGZsECxaAAzQAyQqgBVlXDS who defeats a god named cyyOGEQzmGrkzcBpHWumUTWJQLBXpE
-a god named MKtwhqSxrPwkGCCWUgwyrEiKSMuntN who defeats a god named oqWIPTIjGZsECxaAAzQAyQqgBVlXDS
-a god named QuGqQimPocKkuZoIRVbFyCNXLZKqNp who defeats a god named MKtwhqSxrPwkGCCWUgwyrEiKSMuntN
+a god named RyWNozAeQZSObrPcSVdV who defeats a god named cameron
+a god named aUIpxYSJPMQsNXYniCXk who defeats a god named RyWNozAeQZSObrPcSVdV
+a god named TAaYRUXTAmFPCBSgKgCE who defeats a god named aUIpxYSJPMQsNXYniCXk
+a god named AeKOdnSJPXgkboRIySyn who defeats a god named TAaYRUXTAmFPCBSgKgCE

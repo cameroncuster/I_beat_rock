@@ -2,7 +2,6 @@ import time
 import json
 import uuid
 import requests
-import random
 
 
 class GraniteGladiator:
@@ -26,8 +25,8 @@ class GraniteGladiator:
             "text": f"{guess} 🧑 did not beat {self.prev} 🫦",
         }
 
-        with open("scores.txt", "a") as f:
-            f.write(f"{data}\n")
+        with open("scores.json", "a") as file:
+            json.dump(data, file, ensure_ascii=False, indent=2)
 
     def log_guess(self, guess):
         self.log_file.write(f"{guess}\n")
@@ -98,10 +97,9 @@ while True:
 
     try:
         while True:
-            inc = random.randint(1, 3)
-            while int_to_base26(prv_name + inc) in bad_guesses:
-                inc += 1
-            cur_name = prv_name + inc
+            cur_name = prv_name + 1
+            while int_to_base26(cur_name) in bad_guesses:
+                cur_name += 1
             guess = f"a God named '{int_to_base26(cur_name)}' who defeats a God named '{int_to_base26(prv_name)}'"
             if not player.make_guess(guess):
                 break

@@ -5,55 +5,39 @@ import requests
 
 
 class GraniteGladiator:
-    LOG_GUESSES = False
+    url = "http://localhost:8080/api"
     headers = {
-        "Cookie": "sb-xrrlbpmfxuxumxqbccxz-auth-token=%5B%22eyJhbGciOiJIUzI1NiIsImtpZCI6IjB3Q3RxNnJ0NmpGSWs3TWEiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL3hycmxicG1meHV4dW14cWJjY3h6LnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiIwNGE4OWUzYi02NWI4LTRkZmMtYjRiZi0yODhhYmE5N2ExNjciLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzIxODQ1NjYzLCJpYXQiOjE3MjE4NDIwNjMsImVtYWlsIjoiY3VzdGVyLmNhbWVyb25AZ21haWwuY29tIiwicGhvbmUiOiIiLCJhcHBfbWV0YWRhdGEiOnsicHJvdmlkZXIiOiJnb29nbGUiLCJwcm92aWRlcnMiOlsiZ29vZ2xlIl19LCJ1c2VyX21ldGFkYXRhIjp7ImF2YXRhcl91cmwiOiJodHRwczovL2xoMy5nb29nbGV1c2VyY29udGVudC5jb20vYS9BQ2c4b2NMRjN6Uml6OHo1TzJkd2hRSjJUU3dOQmdaSUN5MjdJTWlldmdKdFFTZ0k1ZU5Mc1E9czk2LWMiLCJlbWFpbCI6ImN1c3Rlci5jYW1lcm9uQGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJmdWxsX25hbWUiOiJDYW1lcm9uIEN1c3RlciIsImlzcyI6Imh0dHBzOi8vYWNjb3VudHMuZ29vZ2xlLmNvbSIsIm5hbWUiOiJDYW1lcm9uIEN1c3RlciIsInBob25lX3ZlcmlmaWVkIjpmYWxzZSwicGljdHVyZSI6Imh0dHBzOi8vbGgzLmdvb2dsZXVzZXJjb250ZW50LmNvbS9hL0FDZzhvY0xGM3pSaXo4ejVPMmR3aFFKMlRTd05CZ1pJQ3kyN0lNaWV2Z0p0UVNnSTVlTkxzUT1zOTYtYyIsInByb3ZpZGVyX2lkIjoiMTE1MTU0MDI5MDk0Njc0MTg3ODM2Iiwic3ViIjoiMTE1MTU0MDI5MDk0Njc0MTg3ODM2In0sInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYWFsIjoiYWFsMSIsImFtciI6W3sibWV0aG9kIjoib2F1dGgiLCJ0aW1lc3RhbXAiOjE3MjE3NzgyNDZ9XSwic2Vzc2lvbl9pZCI6ImNjODE1M2VjLWNiODMtNDI1Mi1iNGVkLWYxZDA1Zjk5NzE2YyIsImlzX2Fub255bW91cyI6ZmFsc2V9.hhU0e0C3X80l1PYv1QI7rG6jyqwjtffQ0cFi_kcQlkU%22%2C%227Cf5lDciJtioHYeLE4DsLQ%22%2Cnull%2Cnull%2Cnull%5D",
         "User-Agent": "Cameron's Machine",
     }
 
     def __init__(self):
-        if self.LOG_GUESSES:
-            self.log_file = open("guesses.txt", "w")
+        self.headers["Cookie"] = input("Enter your cookie: ")
         self.gid = str(uuid.uuid4())
         self.prev = "rock"
         self.score = 0
-
-    def __del__(self):
-        if self.LOG_GUESSES:
-            self.log_file.close()
 
     def save_score(self, guess):
         print(f"score: {self.score}")
 
         data = {
-            # "initials": "CAM",
             "gid": self.gid,
             "score": self.score,
             "text": f"{guess} 🧑 did not beat {self.prev} 🫦",
         }
 
-        response = requests.post(
-            "https://www.whatbeatsrock.com/api/scores", headers=self.headers, json=data
-        )
+        response = requests.post(f"{self.url}/scores", headers=self.headers, json=data)
 
         print(f"score saving status code: {response.status_code}")
         print(f"score saving text: {response.text}")
 
-    def log_guess(self, guess):
-        if self.LOG_GUESSES:
-            self.log_file.write(f"{guess}\n")
-
     def make_guess(self, guess):
-        self.log_guess(guess)
         print(f"guess: {guess}\tscore: {self.score}")
 
         data = {"prev": self.prev, "guess": guess, "gid": self.gid}
 
-        response = requests.post(
-            "https://www.whatbeatsrock.com/api/vs", headers=self.headers, json=data
-        )
+        response = requests.post(f"{self.url}/vs", headers=self.headers, json=data)
 
-        while response.status_code == 418:
+        while response.status_code == 429:
             print("rate limited, sleeping...")
             time.sleep(600)
             response = requests.post(
@@ -94,9 +78,7 @@ def int_to_base26(value):
     return base26_str
 
 
-bad_guesses = {}
-with open("bad_guesses.txt", "r") as f:
-    bad_guesses = set(f.read().split("\n"))
+bad_guesses = set()
 
 while True:
     player = GraniteGladiator()
@@ -104,26 +86,24 @@ while True:
     player.make_guess("paper")
     player.make_guess("scissors")
 
-    prv_name = 0
     guess = ""
+    prv_name = 0
     cur_name = 0
 
-    try:
-        while True:
-            cur_name = prv_name + 1
-            while int_to_base26(cur_name) in bad_guesses:
-                cur_name += 1
-            guess = f"a God named '{int_to_base26(cur_name)}' who defeats a God named '{int_to_base26(prv_name)}'"
-            if not player.make_guess(guess):
-                break
-            prv_name = cur_name
-    except KeyboardInterrupt:
-        print("interrupted...")
+    while True:
+        cur_name = prv_name + 1
+        while int_to_base26(cur_name) in bad_guesses:
+            cur_name += 1
+
+        guess = f"a God named '{int_to_base26(cur_name)}' who defeats a God named '{int_to_base26(prv_name)}'"
+
+        if not player.make_guess(guess):
+            break
+
+        prv_name = cur_name
 
     print(f"losing guess: {guess}")
 
     player.save_score(guess)
 
     bad_guesses.add(int_to_base26(cur_name))
-    with open("bad_guesses.txt", "w") as f:
-        f.write("\n".join(bad_guesses))

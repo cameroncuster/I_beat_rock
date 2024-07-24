@@ -5,19 +5,25 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 class ProxyHTTPRequestHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         # assume the path is correct
-        url = f"https://www.whatbeatsrock.com/api{self.path}"
+        url = f"https://www.whatbeatsrock.com{self.path}"
 
-        cookie = self.headers["Cookie"]
+        print(f"Proxying POST request to {url}")
 
         headers = {
-            "Cookie": cookie,
+            "Cookie": self.headers["Cookie"],
             "User-Agent": "Cameron's Proxy Server",
         }
 
         content_length = int(self.headers["Content-Length"])
         post_data = self.rfile.read(content_length)
 
+        print(f"POST data: {post_data}")
+
         response = requests.post(url, headers=headers, data=post_data)
+
+        print(f"Response from {url}: {response.status_code}")
+        print(f"Response headers: {response.headers}")
+        print(f"Response content: {response.content}")
 
         self.send_response(response.status_code)
         for key, value in response.headers.items():

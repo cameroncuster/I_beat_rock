@@ -5,31 +5,40 @@ import requests
 
 
 class GraniteGladiator:
+    LOG_GUESSES = False
     headers = {"User-Agent": "Cameron's Machine"}
 
     def __init__(self):
-        self.log_file = open("guesses.txt", "w")
+        if self.LOG_GUESSES:
+            self.log_file = open("guesses.txt", "w")
         self.gid = str(uuid.uuid4())
         self.prev = "rock"
         self.score = 0
 
     def __del__(self):
-        self.log_file.close()
+        if self.LOG_GUESSES:
+            self.log_file.close()
 
     def save_score(self, guess):
         print(f"score: {self.score}")
 
         data = {
+            "initials": "CAM",
             "gid": self.gid,
             "score": self.score,
             "text": f"{guess} 🧑 did not beat {self.prev} 🫦",
         }
 
-        with open("scores.json", "a") as file:
-            json.dump(data, file, ensure_ascii=False, indent=2)
+        response = requests.post(
+            "https://www.whatbeatsrock.com/api/scores", headers=self.headers, json=data
+        )
+
+        print(f"score saving status code: {response.status_code}")
+        print(f"score saving text: {response.text}")
 
     def log_guess(self, guess):
-        self.log_file.write(f"{guess}\n")
+        if self.LOG_GUESSES:
+            self.log_file.write(f"{guess}\n")
 
     def make_guess(self, guess):
         self.log_guess(guess)
@@ -58,6 +67,7 @@ class GraniteGladiator:
                 self.prev = guess
                 return True
             else:
+                self.save_score(guess)
                 return False
         else:
             print(f"guess status code: {response.status_code}")

@@ -6,7 +6,10 @@ import requests
 
 class GraniteGladiator:
     LOG_GUESSES = False
-    headers = {"User-Agent": "Cameron's Machine"}
+    headers = {
+        "Cookie": "sb-xrrlbpmfxuxumxqbccxz-auth-token=%5B%22eyJhbGciOiJIUzI1NiIsImtpZCI6IjB3Q3RxNnJ0NmpGSWs3TWEiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL3hycmxicG1meHV4dW14cWJjY3h6LnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiIwNGE4OWUzYi02NWI4LTRkZmMtYjRiZi0yODhhYmE5N2ExNjciLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzIxODQ1NjYzLCJpYXQiOjE3MjE4NDIwNjMsImVtYWlsIjoiY3VzdGVyLmNhbWVyb25AZ21haWwuY29tIiwicGhvbmUiOiIiLCJhcHBfbWV0YWRhdGEiOnsicHJvdmlkZXIiOiJnb29nbGUiLCJwcm92aWRlcnMiOlsiZ29vZ2xlIl19LCJ1c2VyX21ldGFkYXRhIjp7ImF2YXRhcl91cmwiOiJodHRwczovL2xoMy5nb29nbGV1c2VyY29udGVudC5jb20vYS9BQ2c4b2NMRjN6Uml6OHo1TzJkd2hRSjJUU3dOQmdaSUN5MjdJTWlldmdKdFFTZ0k1ZU5Mc1E9czk2LWMiLCJlbWFpbCI6ImN1c3Rlci5jYW1lcm9uQGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJmdWxsX25hbWUiOiJDYW1lcm9uIEN1c3RlciIsImlzcyI6Imh0dHBzOi8vYWNjb3VudHMuZ29vZ2xlLmNvbSIsIm5hbWUiOiJDYW1lcm9uIEN1c3RlciIsInBob25lX3ZlcmlmaWVkIjpmYWxzZSwicGljdHVyZSI6Imh0dHBzOi8vbGgzLmdvb2dsZXVzZXJjb250ZW50LmNvbS9hL0FDZzhvY0xGM3pSaXo4ejVPMmR3aFFKMlRTd05CZ1pJQ3kyN0lNaWV2Z0p0UVNnSTVlTkxzUT1zOTYtYyIsInByb3ZpZGVyX2lkIjoiMTE1MTU0MDI5MDk0Njc0MTg3ODM2Iiwic3ViIjoiMTE1MTU0MDI5MDk0Njc0MTg3ODM2In0sInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYWFsIjoiYWFsMSIsImFtciI6W3sibWV0aG9kIjoib2F1dGgiLCJ0aW1lc3RhbXAiOjE3MjE3NzgyNDZ9XSwic2Vzc2lvbl9pZCI6ImNjODE1M2VjLWNiODMtNDI1Mi1iNGVkLWYxZDA1Zjk5NzE2YyIsImlzX2Fub255bW91cyI6ZmFsc2V9.hhU0e0C3X80l1PYv1QI7rG6jyqwjtffQ0cFi_kcQlkU%22%2C%227Cf5lDciJtioHYeLE4DsLQ%22%2Cnull%2Cnull%2Cnull%5D",
+        "User-Agent": "Cameron's Machine",
+    }
 
     def __init__(self):
         if self.LOG_GUESSES:
@@ -23,7 +26,7 @@ class GraniteGladiator:
         print(f"score: {self.score}")
 
         data = {
-            "initials": "CAM",
+            # "initials": "CAM",
             "gid": self.gid,
             "score": self.score,
             "text": f"{guess} 🧑 did not beat {self.prev} 🫦",

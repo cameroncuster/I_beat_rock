@@ -4,33 +4,33 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 
 class ProxyHTTPRequestHandler(BaseHTTPRequestHandler):
     def do_POST(self):
-        # assume the path is correct
-        url = f"https://www.whatbeatsrock.com{self.path}"
-
-        print(f"Proxying POST request to {url}")
-
-        headers = {
-            "Cookie": self.headers["Cookie"],
-            "User-Agent": "Cameron's Proxy Server",
-        }
-
         content_length = int(self.headers["Content-Length"])
         post_data = self.rfile.read(content_length)
 
-        print(f"POST data: {post_data}")
+        url = f"https://www.whatbeatsrock.com{self.path}"
+        headers = {
+            "Cookie": self.headers.get("Cookie"),
+            "User-Agent": "Cameron's Proxy Server",
+        }
 
-        response = requests.post(url, headers=headers, data=post_data)
+        try:
+            response = requests.post(url, headers=headers, data=post_data, timeout=25)
 
-        print(f"Response from {url}: {response.status_code}")
-        print(f"Response headers: {response.headers}")
-        print(f"Response content: {response.content}")
+            print(f"Received response from {url}")
+            print(f"Response code: {response.status_code}")
+            print(f"Response content: {response.content}")
 
-        self.send_response(response.status_code)
-        for key, value in response.headers.items():
-            self.send_header(key, value)
-        self.end_headers()
+            self.send_response(response.status_code)
+            for key, value in response.headers.items():
+                self.send_header(key, value)
+            self.end_headers()
 
-        self.wfile.write(response.content)
+            self.wfile.write(response.content)
+            self.wfile.flush()
+        except requests.RequestException as e:
+            self.send_error(500, str(e))
+
+        print(f"Completed request to {url}")
 
 
 def run(server_class=HTTPServer, handler_class=ProxyHTTPRequestHandler, port=8080):

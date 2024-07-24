@@ -1,7 +1,7 @@
 import time
 import json
 import uuid
-import requests
+import httpx
 
 
 class GraniteGladiator:
@@ -15,9 +15,10 @@ class GraniteGladiator:
         self.gid = str(uuid.uuid4())
         self.prev = "rock"
         self.score = 0
+        self.client = httpx.Client()
 
     def save_score(self, guess):
-        print(f"score: {self.score}")
+        print(f"saving score: {self.score}")
 
         data = {
             "gid": self.gid,
@@ -25,57 +26,77 @@ class GraniteGladiator:
             "text": f"{guess} 🧑 did not beat {self.prev} 🫦",
         }
 
-        response = requests.post(f"{self.url}/scores", headers=self.headers, json=data)
+        response = self.client.post(
+            f"{self.url}/scores", headers=self.headers, json=data
+        )
 
         print(f"score saving status code: {response.status_code}")
         print(f"score saving text: {response.text}")
 
-    def make_guess(self, guess):
+    def make_guess(self, guess, max_retries=3, retry_delay=5):
         print(f"guess: {guess}\tscore: {self.score}")
 
         data = {"prev": self.prev, "guess": guess, "gid": self.gid}
 
-        response = requests.post(f"{self.url}/vs", headers=self.headers, json=data)
+        for attempt in range(max_retries):
+            try:
+                response = self.client.post(
+                    f"{self.url}/vs", headers=self.headers, json=data, timeout=30
+                )
+                print("response status code:", response.status_code)
+                response.raise_for_status()
 
-        while response.status_code == 429:
-            print("rate limited, sleeping...")
-            time.sleep(600)
-            response = requests.post(
-                "https://www.whatbeatsrock.com/api/vs", headers=self.headers, json=data
-            )
+                if response.status_code == 200:
+                    pretty_response_content = json.dumps(response.json(), indent=2)
+                    print(f"response content: {pretty_response_content}")
 
-        if response.status_code == 200:
-            pretty_response_content = json.dumps(response.json(), indent=2)
+                    if response.json().get("data", {}).get("guess_wins"):
+                        print("Guess was correct!")
+                        self.score += 1
+                        self.prev = guess
+                        return True
+                    else:
+                        self.save_score(guess)
+                        return False
+                else:
+                    print(f"Unexpected status code: {response.status_code}")
+                    return False
 
-            print(f"response content: {pretty_response_content}")
+            except httpx.TimeoutException:
+                print(f"Request timed out (attempt {attempt + 1}/{max_retries})")
+            except httpx.HTTPStatusError as e:
+                if e.response.status_code == 429:
+                    print("Rate limited, sleeping...")
+                    time.sleep(600)  # Sleep for 10 minutes
+                else:
+                    print(f"HTTP error occurred: {e}")
+                    return False
+            except httpx.RequestError as e:
+                print(f"An error occurred while requesting: {e}")
 
-            if response.json().get("data").get("guess_wins"):
-                self.score += 1
-                self.prev = guess
-                return True
+            if attempt < max_retries - 1:
+                print(f"Retrying in {retry_delay} seconds...")
+                time.sleep(retry_delay)
             else:
-                self.save_score(guess)
+                print("Max retries reached. Giving up.")
                 return False
-        else:
-            print(f"guess status code: {response.status_code}")
-            print(f"guess error: {response.text}")
-            return False
+
+        return False
+
+    def __del__(self):
+        self.client.close()
 
 
-def int_to_base26(value):
-    chars = "abcdefghijklmnopqrstuvwxyz"
+def int_to_base26(n):
+    if n == 0:
+        return "a"
 
-    if value == 0:
-        return chars[0]
+    letters = []
+    while n:
+        n, r = divmod(n, 26)
+        letters.append(chr(r + 97))
 
-    base26_str = ""
-    base = len(chars)
-
-    while value > 0:
-        value, remainder = divmod(value, base)
-        base26_str = chars[remainder] + base26_str
-
-    return base26_str
+    return "".join(reversed(letters))
 
 
 bad_guesses = set()
@@ -103,7 +124,5 @@ while True:
         prv_name = cur_name
 
     print(f"losing guess: {guess}")
-
-    player.save_score(guess)
 
     bad_guesses.add(int_to_base26(cur_name))

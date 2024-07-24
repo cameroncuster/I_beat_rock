@@ -1,3 +1,4 @@
+import time
 import json
 import uuid
 import requests
@@ -40,6 +41,13 @@ class GraniteGladiator:
         response = requests.post(
             "https://www.whatbeatsrock.com/api/vs", headers=self.headers, json=data
         )
+
+        while response.status_code == 418:
+            print("rate limited, sleeping...")
+            time.sleep(600)
+            response = requests.post(
+                "https://www.whatbeatsrock.com/api/vs", headers=self.headers, json=data
+            )
 
         if response.status_code == 200:
             pretty_response_content = json.dumps(response.json(), indent=2)

@@ -1,0 +1,3 @@
+{'gid': '596e51eb-b44d-4e60-a7ab-1e735b362c46', 'score': 97, 'text': "a God named 'hh' who defeats a God named 'he' 🧑 did not beat a God named 'he' who defeats a God named 'hd' \U0001fae6"}
+{'gid': '011c1943-901e-4912-86bd-359987172c26', 'score': 99, 'text': "a God named 'hg' who defeats a God named 'he' 🧑 did not beat a God named 'he' who defeats a God named 'hd' \U0001fae6"}
+{'gid': 'e2d954cf-9b4c-4d54-9a06-05b9502f9a02', 'score': 302, 'text': "a God named 'xs' who defeats a God named 'xp' 🧑 did not beat a God named 'xp' who defeats a God named 'xo' \U0001fae6"}

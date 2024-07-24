@@ -1,4 +1,4 @@
-import requests
+import httpx
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 
@@ -10,25 +10,22 @@ class ProxyHTTPRequestHandler(BaseHTTPRequestHandler):
         url = f"https://www.whatbeatsrock.com{self.path}"
         headers = {
             "Cookie": self.headers.get("Cookie"),
-            "User-Agent": "Cameron's Proxy Server",
+            "User-Agent": "@meaf, on discord",
         }
 
-        try:
-            response = requests.post(url, headers=headers, data=post_data, timeout=25)
+        response = httpx.Client().post(url, headers=headers, content=post_data, timeout=25)
 
-            print(f"Received response from {url}")
-            print(f"Response code: {response.status_code}")
-            print(f"Response content: {response.content}")
+        print(f"Received response from {url}")
+        print(f"Response code: {response.status_code}")
+        print(f"Response content: {response.content}")
 
-            self.send_response(response.status_code)
-            for key, value in response.headers.items():
-                self.send_header(key, value)
-            self.end_headers()
+        self.send_response(response.status_code)
+        for key, value in response.headers.items():
+            self.send_header(key, value)
+        self.end_headers()
 
-            self.wfile.write(response.content)
-            self.wfile.flush()
-        except requests.RequestException as e:
-            self.send_error(500, str(e))
+        self.wfile.write(response.content)
+        self.wfile.flush()
 
         print(f"Completed request to {url}")
 

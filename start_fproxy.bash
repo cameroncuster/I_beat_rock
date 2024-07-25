@@ -1,6 +1,5 @@
 #!/bin/bash
 curl -o fproxy.py https://raw.githubusercontent.com/cameroncuster/I_beat_rock/main/fproxy.py
-curl -o requirements.txt https://raw.githubusercontent.com/cameroncuster/I_beat_rock/main/requirements.txt
-sudo apt install python3-pip -y
-pip install -r requirements.txt
+sudo apt install python3-httpx -y
+sudo apt install python3-aiohttp -y
 python3 fproxy.py

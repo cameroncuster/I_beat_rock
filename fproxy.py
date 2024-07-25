@@ -44,7 +44,6 @@ async def proxy_request(request):
     data = await request.json()
     upstream_url = (f"https://www.whatbeatsrock.com/{path}").strip()
     headers = {
-        "Cookie": request.headers.get("Cookie"),
         "User-Agent": "Sexy Beast 69",
     }
 
@@ -58,6 +57,9 @@ async def proxy_request(request):
     response_body = json.loads(upstream_response._content.decode("utf-8"))
 
     print(f"Proxying a {upstream_response.status_code}")
+    if upstream_response.status_code != 200:
+        print(f"Response: {response_body}")
+
     return web.Response(
         text=json.dumps(response_body),
         status=upstream_response.status_code,
@@ -88,4 +90,4 @@ async def stop_background_task(app):
 
 
 if __name__ == "__main__":
-    web.run_app(init_app())
+    web.run_app(init_app(), port=8081)

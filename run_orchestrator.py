@@ -34,7 +34,7 @@ async def wait_for_proxies():
                 proxy_wait_task = None
             return
         if proxy_wait_task is None:
-            proxy_wait_task = asyncio.create_task(asyncio.sleep(300))
+            proxy_wait_task = asyncio.create_task(asyncio.sleep(15))
         try:
             await proxy_wait_task
         except asyncio.CancelledError:
@@ -53,12 +53,15 @@ class Orchestrator:
             await wait_for_proxies()
             host = proxy_pool_singleton.pop_proxy()
 
-        url = f"http://{host}:8080/{path}"
+        url = f"http://{host}:8081/{path}"
 
         try:
             response = await self.client.post(url, json=data)
             response.raise_for_status()
+        except KeyboardInterrupt:
+            sys.exit()
         except Exception as e:
+            # TODO need more error handling
             print(f"Failed to bang proxy: {e}")
             return None
 
@@ -97,6 +100,8 @@ class Player:
 
             response.raise_for_status()
             return True
+        except KeyboardInterrupt:
+            sys.exit()
         except Exception as e:
             print(f"Failed to save score: {e}")
             return False
@@ -137,6 +142,7 @@ async def background_task():
     bad_names = set()
 
     try:
+        print("Starting game...")
         player = Player()
 
         await player.make_guess(orchestrator, "paper")
@@ -145,6 +151,7 @@ async def background_task():
         prv_name = 0
         cur_name = 0
 
+        print("Starting guessing loop...")
         while True:
             cur_name = prv_name + 1
             while int_to_string(cur_name) in bad_names:
@@ -152,10 +159,14 @@ async def background_task():
 
             guess = f"a God named '{int_to_string(cur_name)}' who defeats a God named '{int_to_string(prv_name)}'"
 
-            if not player.make_guess(orchestrator, guess):
+            if not await player.make_guess(orchestrator, guess):
                 break
 
+            print("Score:", player.score)
+
             prv_name = cur_name
+
+        print("Final score:", player.score)
 
         bad_names.add(int_to_string(cur_name))
     except:
@@ -174,12 +185,10 @@ async def init_app():
 
 
 async def handle_register(request):
-    data = await request.json()
-
     proxy_host, _ = request._transport_peername
     proxy_pool_singleton.push_proxy(proxy_host)
 
-    return web.json_response({"status": "success", "data": data})
+    return web.json_response({"status": "success"})
 
 
 async def start_background_task(app):

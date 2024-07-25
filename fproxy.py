@@ -10,11 +10,11 @@ client = httpx.AsyncClient()
 # If we have a local hostfile, read it, otherwise download it
 async def get_host():
     try:
-        with open("master_ip.txt") as file:
+        with open("orchestrator_host.txt") as file:
             return file.readlines()[0].strip()
     except:
         fetch_response = await client.get(
-            "https://raw.githubusercontent.com/cameroncuster/I_beat_rock/main/master_ip.txt"
+            "https://raw.githubusercontent.com/cameroncuster/I_beat_rock/main/orchestrator_host.txt"
         )
         return fetch_response._content.decode("utf-8").strip()
 
@@ -25,14 +25,16 @@ async def update_orchestrator():
     await asyncio.sleep(5)
     while True:
         orchestrator_url = f"http://{await get_host()}/register"
+        delay = 10
         try:
-            rsp = await client.post(orchestrator_url)
-            if rsp.status_code == 200:
+            response = await client.post(orchestrator_url)
+            response.raise_for_status()
+            if response.status_code == 200:
                 print("Successfully (re-)registered!")
                 delay = 60  # We succeeded to register, so we can probably just chill
         except httpx.ConnectError:
             print("Didn't register...")
-            delay = 10  # We didn't register, so we should try again soon
+            # We didn't register, so we should try again soon (10 seconds)
         await asyncio.sleep(delay)
 
 

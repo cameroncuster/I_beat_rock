@@ -6,12 +6,9 @@ import httpx
 
 class GraniteGladiator:
     url = "http://localhost:8080/api"
-    headers = {
-        "User-Agent": "Cameron's Machine",
-    }
 
     def __init__(self):
-        self.headers["Cookie"] = input("Enter your cookie: ")
+        self.headers = {"Cookie": input("Enter your session cookie: ")}
         self.gid = str(uuid.uuid4())
         self.prev = "rock"
         self.score = 0

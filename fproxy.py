@@ -1,21 +1,20 @@
+# modified from: https://github.com/JacobSteinebronn/BeatRock/blob/main/data_orchestrator.py
 import json
-import uuid
 import httpx
 from aiohttp import web
 import asyncio
 
 client = httpx.AsyncClient()
-proxy_uuid = str(uuid.uuid4())
 
 
 # If we have a local hostfile, read it, otherwise download it
 async def get_host():
     try:
-        with open("orchestrator_host.txt") as file:
+        with open("master_ip.txt") as file:
             return file.readlines()[0].strip()
     except:
         fetch_response = await client.get(
-            "https://raw.githubusercontent.com/JacobSteinebronn/BeatRock/main/orchestrator_host.txt"
+            "https://raw.githubusercontent.com/cameroncuster/I_beat_rock/main/master_ip.txt"
         )
         return fetch_response._content.decode("utf-8").strip()
 
@@ -27,7 +26,7 @@ async def update_orchestrator():
     while True:
         orchestrator_url = f"http://{await get_host()}/register"
         try:
-            rsp = await client.post(orchestrator_url, json={"proxy_uuid": proxy_uuid})
+            rsp = await client.post(orchestrator_url)
             if rsp.status_code == 200:
                 print("Successfully (re-)registered!")
                 delay = 60  # We succeeded to register, so we can probably just chill
@@ -44,7 +43,7 @@ async def proxy_request(request):
     upstream_url = (f"https://www.whatbeatsrock.com/{path}").strip()
     headers = {
         "Cookie": request.headers.get("Cookie"),
-        "User-Agent": "Cameron's Proxy",
+        "User-Agent": "Sexy Beast 69",
     }
 
     try:
@@ -55,7 +54,6 @@ async def proxy_request(request):
         return web.Response(status=503)
 
     response_body = json.loads(upstream_response._content.decode("utf-8"))
-    response_body["proxy_uuid"] = proxy_uuid
 
     print(f"Proxying a {upstream_response.status_code}")
     return web.Response(
@@ -69,10 +67,8 @@ async def init_app():
     app = web.Application()
     app.router.add_post("/api/{path}", proxy_request)
 
-    """
     app.on_startup.append(start_background_task)
     app.on_cleanup.append(stop_background_task)
-    """
 
     return app
 

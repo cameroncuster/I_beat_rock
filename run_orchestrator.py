@@ -93,6 +93,7 @@ class Player:
             response = await orchestrator.client.post(
                 url=f"https://whatbeatsrock.com/api/scores",
                 headers={
+                    "Cookie": "sb-xrrlbpmfxuxumxqbccxz-auth-token=%5B%22eyJhbGciOiJIUzI1NiIsImtpZCI6IjB3Q3RxNnJ0NmpGSWs3TWEiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL3hycmxicG1meHV4dW14cWJjY3h6LnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiIwNGE4OWUzYi02NWI4LTRkZmMtYjRiZi0yODhhYmE5N2ExNjciLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzIxOTQyNTQzLCJpYXQiOjE3MjE5Mzg5NDMsImVtYWlsIjoiY3VzdGVyLmNhbWVyb25AZ21haWwuY29tIiwicGhvbmUiOiIiLCJhcHBfbWV0YWRhdGEiOnsicHJvdmlkZXIiOiJnb29nbGUiLCJwcm92aWRlcnMiOlsiZ29vZ2xlIl19LCJ1c2VyX21ldGFkYXRhIjp7ImF2YXRhcl91cmwiOiJodHRwczovL2xoMy5nb29nbGV1c2VyY29udGVudC5jb20vYS9BQ2c4b2NMRjN6Uml6OHo1TzJkd2hRSjJUU3dOQmdaSUN5MjdJTWlldmdKdFFTZ0k1ZU5Mc1E9czk2LWMiLCJlbWFpbCI6ImN1c3Rlci5jYW1lcm9uQGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJmdWxsX25hbWUiOiJDYW1lcm9uIEN1c3RlciIsImlzcyI6Imh0dHBzOi8vYWNjb3VudHMuZ29vZ2xlLmNvbSIsIm5hbWUiOiJDYW1lcm9uIEN1c3RlciIsInBob25lX3ZlcmlmaWVkIjpmYWxzZSwicGljdHVyZSI6Imh0dHBzOi8vbGgzLmdvb2dsZXVzZXJjb250ZW50LmNvbS9hL0FDZzhvY0xGM3pSaXo4ejVPMmR3aFFKMlRTd05CZ1pJQ3kyN0lNaWV2Z0p0UVNnSTVlTkxzUT1zOTYtYyIsInByb3ZpZGVyX2lkIjoiMTE1MTU0MDI5MDk0Njc0MTg3ODM2Iiwic3ViIjoiMTE1MTU0MDI5MDk0Njc0MTg3ODM2In0sInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYWFsIjoiYWFsMSIsImFtciI6W3sibWV0aG9kIjoib2F1dGgiLCJ0aW1lc3RhbXAiOjE3MjE4NDI4MDF9XSwic2Vzc2lvbl9pZCI6IjkxODlkNThhLTk0NDctNDFjNi05ODYyLTFhZjY0NzE3Njg2OCIsImlzX2Fub255bW91cyI6ZmFsc2V9.51N15MeEQ46G1H0KHnoLt2Akzwf4v9-GlY9Oa7abL48%22%2C%229L_ZGlHgj6hYoKw2uvEGhg%22%2Cnull%2Cnull%2Cnull%5D",
                     "User-Agent": "CAM",
                 },
                 json=data,
@@ -118,9 +119,13 @@ class Player:
             if data is None:
                 continue
 
-            self.prev = guess
-            self.score += 1
-            return True
+            if data["data"]["guess_wins"]:
+                self.prev = guess
+                self.score += 1
+                return True
+
+            await self.save_score(orchestrator, guess)
+            return False
 
         return False
 
@@ -141,37 +146,38 @@ async def background_task():
 
     bad_names = set()
 
-    try:
-        print("Starting game...")
-        player = Player()
+    while True:
+        try:
+            print("Starting game...")
+            player = Player()
 
-        await player.make_guess(orchestrator, "paper")
-        await player.make_guess(orchestrator, "scissors")
+            await player.make_guess(orchestrator, "paper")
+            await player.make_guess(orchestrator, "scissors")
 
-        prv_name = 0
-        cur_name = 0
+            prv_name = 0
+            cur_name = 0
 
-        print("Starting guessing loop...")
-        while True:
-            cur_name = prv_name + 1
-            while int_to_string(cur_name) in bad_names:
-                cur_name += 1
+            print("Starting guessing loop...")
+            while True:
+                cur_name = prv_name + 1
+                while int_to_string(cur_name) in bad_names:
+                    cur_name += 1
 
-            guess = f"a God named '{int_to_string(cur_name)}' who defeats a God named '{int_to_string(prv_name)}'"
+                guess = f"a God named '{int_to_string(cur_name)}' who defeats a God named '{int_to_string(prv_name)}'"
 
-            if not await player.make_guess(orchestrator, guess):
-                break
+                if not await player.make_guess(orchestrator, guess):
+                    break
 
-            print("Score:", player.score)
+                print("Score:", player.score)
 
-            prv_name = cur_name
+                prv_name = cur_name
 
-        print("Final score:", player.score)
+            print("Final score:", player.score)
 
-        bad_names.add(int_to_string(cur_name))
-    except:
-        print("Come on!")
-        sys.exit(traceback.print_exc())
+            bad_names.add(int_to_string(cur_name))
+        except:
+            print("Come on!")
+            sys.exit(traceback.print_exc())
 
 
 async def init_app():

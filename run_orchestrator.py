@@ -58,8 +58,6 @@ class Orchestrator:
         try:
             response = await self.client.post(url, json=data)
             response.raise_for_status()
-        except KeyboardInterrupt:
-            sys.exit()
         except Exception as e:
             # TODO need more error handling
             print(f"Failed to bang proxy: {e}")
@@ -74,6 +72,9 @@ class Orchestrator:
             return None
 
 
+cookie = "Nom nom"
+
+
 class Player:
     def __init__(self):
         self.gid = str(uuid.uuid4())
@@ -82,7 +83,6 @@ class Player:
 
     async def save_score(self, orchestrator, guess):
         data = {
-            "initials": "CAM",
             "gid": self.gid,
             "score": self.score,
             "text": f"{guess} 🧑 did not beat {self.prev} 🫦",
@@ -93,7 +93,7 @@ class Player:
             response = await orchestrator.client.post(
                 url=f"https://whatbeatsrock.com/api/scores",
                 headers={
-                    "Cookie": "sb-xrrlbpmfxuxumxqbccxz-auth-token=%5B%22eyJhbGciOiJIUzI1NiIsImtpZCI6IjB3Q3RxNnJ0NmpGSWs3TWEiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL3hycmxicG1meHV4dW14cWJjY3h6LnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiIwNGE4OWUzYi02NWI4LTRkZmMtYjRiZi0yODhhYmE5N2ExNjciLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzIxOTQyNTQzLCJpYXQiOjE3MjE5Mzg5NDMsImVtYWlsIjoiY3VzdGVyLmNhbWVyb25AZ21haWwuY29tIiwicGhvbmUiOiIiLCJhcHBfbWV0YWRhdGEiOnsicHJvdmlkZXIiOiJnb29nbGUiLCJwcm92aWRlcnMiOlsiZ29vZ2xlIl19LCJ1c2VyX21ldGFkYXRhIjp7ImF2YXRhcl91cmwiOiJodHRwczovL2xoMy5nb29nbGV1c2VyY29udGVudC5jb20vYS9BQ2c4b2NMRjN6Uml6OHo1TzJkd2hRSjJUU3dOQmdaSUN5MjdJTWlldmdKdFFTZ0k1ZU5Mc1E9czk2LWMiLCJlbWFpbCI6ImN1c3Rlci5jYW1lcm9uQGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJmdWxsX25hbWUiOiJDYW1lcm9uIEN1c3RlciIsImlzcyI6Imh0dHBzOi8vYWNjb3VudHMuZ29vZ2xlLmNvbSIsIm5hbWUiOiJDYW1lcm9uIEN1c3RlciIsInBob25lX3ZlcmlmaWVkIjpmYWxzZSwicGljdHVyZSI6Imh0dHBzOi8vbGgzLmdvb2dsZXVzZXJjb250ZW50LmNvbS9hL0FDZzhvY0xGM3pSaXo4ejVPMmR3aFFKMlRTd05CZ1pJQ3kyN0lNaWV2Z0p0UVNnSTVlTkxzUT1zOTYtYyIsInByb3ZpZGVyX2lkIjoiMTE1MTU0MDI5MDk0Njc0MTg3ODM2Iiwic3ViIjoiMTE1MTU0MDI5MDk0Njc0MTg3ODM2In0sInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYWFsIjoiYWFsMSIsImFtciI6W3sibWV0aG9kIjoib2F1dGgiLCJ0aW1lc3RhbXAiOjE3MjE4NDI4MDF9XSwic2Vzc2lvbl9pZCI6IjkxODlkNThhLTk0NDctNDFjNi05ODYyLTFhZjY0NzE3Njg2OCIsImlzX2Fub255bW91cyI6ZmFsc2V9.51N15MeEQ46G1H0KHnoLt2Akzwf4v9-GlY9Oa7abL48%22%2C%229L_ZGlHgj6hYoKw2uvEGhg%22%2Cnull%2Cnull%2Cnull%5D",
+                    "Cookie": cookie,
                     "User-Agent": "CAM",
                 },
                 json=data,
@@ -101,8 +101,6 @@ class Player:
 
             response.raise_for_status()
             return True
-        except KeyboardInterrupt:
-            sys.exit()
         except Exception as e:
             print(f"Failed to save score: {e}")
             return False
@@ -183,6 +181,7 @@ async def background_task():
 async def init_app():
     app = web.Application()
     app.router.add_post("/register", handle_register)
+    app.router.add_post("/cookie", handle_cookie)
 
     app.on_startup.append(start_background_task)
     app.on_cleanup.append(stop_background_task)
@@ -193,8 +192,19 @@ async def init_app():
 async def handle_register(request):
     proxy_host, _ = request._transport_peername
     proxy_pool_singleton.push_proxy(proxy_host)
-
     return web.json_response({"status": "success"})
+
+
+async def handle_cookie(request):
+    global cookie
+    data = await request.json()
+    try:
+        cookie = data["Cookie"]
+        print(f"Cookie updated: {cookie}", flush=True)
+        return web.json_response({"status": "success"})
+    except Exception as e:
+        print(f"Failed to update cookie: {e}")
+        return web.json_response({"status": "failed"})
 
 
 async def start_background_task(app):

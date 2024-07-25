@@ -1,0 +1,1 @@
+- determine if the "Internal IP" can be used to access the host from the proxy servers

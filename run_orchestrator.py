@@ -155,6 +155,12 @@ async def background_task():
 
     bad_names = set()
 
+    try:
+        with open("bad_names.txt") as f:
+            bad_names = set(f.read().splitlines())
+    except FileNotFoundError:
+        pass
+
     while True:
         try:
             print("Starting game...")
@@ -190,6 +196,11 @@ async def background_task():
             print("Final score:", player.score)
 
             bad_names.add(int_to_string(cur_name))
+
+            print("Saving bad names...")
+            with open("bad_names.txt", "w") as f:
+                f.write("\n".join(bad_names))
+
         except:
             print("Come on!")
             sys.exit(traceback.print_exc())

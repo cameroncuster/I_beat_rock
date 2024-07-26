@@ -53,7 +53,7 @@ class Orchestrator:
             await wait_for_proxies()
             host = proxy_pool_singleton.pop_proxy()
 
-        url = f"http://{host}:8081/{path}"
+        url = f"http://{host}:8080/{path}"
 
         try:
             response = await self.client.post(url, json=data)
@@ -220,4 +220,4 @@ async def stop_background_task(app):
 
 
 if __name__ == "__main__":
-    web.run_app(init_app(), port=8080)
+    web.run_app(init_app(), port=80)

@@ -7,7 +7,7 @@ def get_host():
 
 
 response = requests.post(
-    f"http://{get_host()}/cookie", json={"cookie": input("Enter cookie: ")}
+    f"http://{get_host()}/cookie", json={"Cookie": input("Enter cookie: ")}
 )
 
 print(response.status_code)

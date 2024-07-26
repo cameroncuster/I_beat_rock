@@ -91,7 +91,7 @@ class Player:
         # request is sent directly from the orchestrator, no need to bang the proxies this time...
         try:
             response = await orchestrator.client.post(
-                url=f"https://www.whatbeatsrock.com/api/scores",
+                url="https://www.whatbeatsrock.com/api/scores",
                 headers={
                     "Cookie": cookie,
                     "User-Agent": "CAM",
@@ -105,7 +105,7 @@ class Player:
             print(f"Failed to save score: {e}")
             return False
 
-    async def make_guess(self, orchestrator, guess, max_retries=3):
+    async def make_guess(self, orchestrator, guess, max_retries=10):
         data = {"prev": self.prev, "guess": guess, "gid": self.gid}
 
         for _ in range(max_retries):

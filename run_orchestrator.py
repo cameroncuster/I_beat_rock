@@ -115,6 +115,8 @@ class Player:
             )
 
             if data is None:
+                # let's give it a second to recover
+                await asyncio.sleep(5)
                 continue
 
             if data["data"]["guess_wins"]:
@@ -126,6 +128,13 @@ class Player:
             return False
 
         return False
+
+    async def lose(self, orchestrator):
+        if await self.make_guess(orchestrator, "a useless rock"):
+            print("WTF we won?")
+            if await self.make_guess(orchestrator, "wefwefwef"):
+                print("WTF we won again?")
+                await self.make_guess(orchestrator, "wefwefwefwef")
 
 
 async def background_task():
@@ -139,6 +148,8 @@ async def background_task():
             letters.append(chr(r + 97))
 
         return "".join(reversed(letters))
+
+    score_targets = [500, 1000, 5000, 10000, 13000]
 
     orchestrator = Orchestrator()
 
@@ -157,6 +168,12 @@ async def background_task():
 
             print("Starting guessing loop...")
             while True:
+                if len(score_targets) > 0 and player.score >= score_targets[0]:
+                    print("Score target reached:", score_targets[0])
+                    score_targets.pop(0)
+                    await player.lose(orchestrator)
+                    break
+
                 cur_name = prv_name + 1
                 while int_to_string(cur_name) in bad_names:
                     cur_name += 1

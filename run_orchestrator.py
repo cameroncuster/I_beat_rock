@@ -91,7 +91,7 @@ class Player:
         # request is sent directly from the orchestrator, no need to bang the proxies this time...
         try:
             response = await orchestrator.client.post(
-                url=f"https://whatbeatsrock.com/api/scores",
+                url=f"https://www.whatbeatsrock.com/api/scores",
                 headers={
                     "Cookie": cookie,
                     "User-Agent": "CAM",

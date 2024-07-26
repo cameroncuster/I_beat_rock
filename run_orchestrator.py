@@ -220,4 +220,4 @@ async def stop_background_task(app):
 
 
 if __name__ == "__main__":
-    web.run_app(init_app(), port=80)
+    web.run_app(init_app(), port=8080)

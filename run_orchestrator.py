@@ -33,7 +33,7 @@ async def wait_for_proxies():
                 proxy_wait_task.cancel()
                 proxy_wait_task = None
             return
-        if proxy_wait_task is None:
+        if proxy_wait_task is None or proxy_wait_task.done():
             proxy_wait_task = asyncio.create_task(asyncio.sleep(15))
         try:
             await proxy_wait_task

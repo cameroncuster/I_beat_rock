@@ -195,6 +195,7 @@ async def background_task():
                     break
 
                 print("Score:", player.score)
+                print("Currently have:", len(proxy_pool_singleton.proxies), "proxies")
 
                 prv_name = cur_name
 

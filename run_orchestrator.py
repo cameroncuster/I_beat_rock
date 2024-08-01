@@ -139,7 +139,9 @@ class Player:
             if await self.make_guess(orchestrator, "a useless rock"):
                 # this should never happen
                 print("We won with: a useless rock -- this state should be unreachable")
-        await self.save_score(orchestrator, "a useless rock")
+            await self.save_score(orchestrator, "a useless rock")
+            return
+        await self.save_score(orchestrator, "camc FTW ;)")
 
 
 async def background_task():

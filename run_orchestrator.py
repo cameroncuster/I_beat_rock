@@ -124,17 +124,20 @@ class Player:
                 self.score += 1
                 return True
 
-            await self.save_score(orchestrator, guess)
             return False
 
         return False
 
     async def lose(self, orchestrator):
-        if await self.make_guess(orchestrator, "a useless rock"):
-            print("WTF we won?")
-            if await self.make_guess(orchestrator, "wefwefwef"):
-                print("WTF we won again?")
-                await self.make_guess(orchestrator, "wefwefwefwef")
+        if not await self.make_guess(orchestrator, "Thanos with a full infinity gauntlet 😈 👻"):
+            print("Failed to lose")
+            return
+        if await self.make_guess(orchestrator, "camc FTW ;)"):
+            print("We won with: camc FTW ;)")
+            if await self.make_guess(orchestrator, "a useless rock"):
+                # this should never happen
+                print("We won with: a useless rock -- this state should be unreachable")
+        await self.save_score(orchestrator, "a useless rock")
 
 
 async def background_task():
@@ -149,7 +152,7 @@ async def background_task():
 
         return "".join(reversed(letters))
 
-    score_targets = [500, 1000, 5000, 10000, 13000]
+    score_targets = [1000, 5000, 10000, 13000, 17000, 20000]
 
     orchestrator = Orchestrator()
 

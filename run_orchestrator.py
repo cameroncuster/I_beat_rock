@@ -129,7 +129,9 @@ class Player:
         return False
 
     async def lose(self, orchestrator):
-        if not await self.make_guess(orchestrator, "Thanos with a full infinity gauntlet 😈 👻"):
+        if not await self.make_guess(
+            orchestrator, "Thanos with a full infinity gauntlet 😈 👻"
+        ):
             print("Failed to lose")
             return
         if await self.make_guess(orchestrator, "camc FTW ;)"):

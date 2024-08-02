@@ -6,6 +6,8 @@ import asyncio
 import traceback
 from aiohttp import web
 
+target = 13000
+
 
 class ProxyPool:
     def __init__(self):
@@ -141,6 +143,7 @@ class Player:
                 print("We won with: a useless rock -- this state should be unreachable")
             await self.save_score(orchestrator, "a useless rock")
             return
+        print("Saving score...")
         await self.save_score(orchestrator, "camc FTW ;)")
 
 
@@ -156,11 +159,12 @@ async def background_task():
 
         return "".join(reversed(letters))
 
-    score_targets = [1000, 5000, 10000, 13000, 17000, 20000]
-
     orchestrator = Orchestrator()
 
     bad_names = set()
+
+    prv_name = 0
+    cur_name = 0
 
     try:
         with open("bad_names.txt") as f:
@@ -176,14 +180,10 @@ async def background_task():
             await player.make_guess(orchestrator, "paper")
             await player.make_guess(orchestrator, "scissors")
 
-            prv_name = 0
-            cur_name = 0
-
             print("Starting guessing loop...")
             while True:
-                if len(score_targets) > 0 and player.score >= score_targets[0]:
-                    print("Score target reached:", score_targets[0])
-                    score_targets.pop(0)
+                if player.score >= target:
+                    print("Score target reached")
                     await player.lose(orchestrator)
                     break
 

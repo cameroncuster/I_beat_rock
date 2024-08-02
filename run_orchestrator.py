@@ -109,17 +109,17 @@ class Player:
         data = {"prev": self.prev, "guess": guess, "gid": self.gid}
 
         for _ in range(max_retries):
-            data = await orchestrator.bang_proxy(
+            response = await orchestrator.bang_proxy(
                 data,
                 "api/vs",
             )
 
-            if data is None:
+            if response is None:
                 # let's give it a second to recover
                 await asyncio.sleep(5)
                 continue
 
-            if data["data"]["guess_wins"]:
+            if response["data"]["guess_wins"]:
                 self.prev = guess
                 self.score += 1
                 return True

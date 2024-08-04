@@ -5,6 +5,9 @@ import httpx
 import asyncio
 import traceback
 from aiohttp import web
+from collections import deque
+
+target = 13000
 
 
 class ProxyPool:
@@ -146,29 +149,86 @@ class Player:
 
 
 async def background_task():
+    def int_to_string(n):
+        if n == 0:
+            return "a"
+
+        letters = []
+        while n:
+            n, r = divmod(n, 26)
+            letters.append(chr(r + 97))
+
+        return "".join(reversed(letters))
+
+    def string_to_int(s):
+        n = 0
+        for c in s:
+            n = n * 26 + ord(c) - 97
+        return n
+
+    # test the helpers
+    for i in range(1000):
+        assert string_to_int(int_to_string(i)) == i
+
     orchestrator = Orchestrator()
 
-    try:
-        print("Starting game...")
+    bad_names = set()
 
-        player = Player()
+    while True:
+        try:
+            print("Starting game...")
+            player = Player()
 
-        with open("winning_guesses.txt", "r") as f:
-            lines = f.readlines()
+            await player.make_guess(orchestrator, "a clown")
 
-            for guess in lines:
-                print("Score:", player.score, "out of", len(lines))
+            with open("winning_guesses.txt", "r") as f:
+                lines = f.readlines()
+
+                last_guess = lines[-1].strip()
+                print("Last guess:", last_guess)
+
+                split_guess = last_guess.split("'")
+                print("Split guess:", split_guess)
+
+                last_name_str = split_guess[1]
+                print("Parsing last_name_str:", last_name_str)
+
+                last_name = string_to_int(last_name_str)
+
+                if not await player.make_guess(orchestrator, last_guess):
+                    print("Guess failed:", last_guess)
+                    raise Exception("Failed to enter the guessing loop")
+
+            print("Starting guessing loop...")
+            while True:
+                if player.score >= target:
+                    print("Score target reached")
+                    await player.lose(orchestrator)
+                    break
+
+                name = last_name + 1
+                while name in bad_names:
+                    name += 1
+
+                guess = f"a God named '{int_to_string(name)}' who defeats a God named '{int_to_string(last_name)}'"
+
+                if not await player.make_guess(orchestrator, guess):
+                    bad_names.add(name)
+                    break
+
+                with open("winning_guesses.txt", "a") as f:
+                    f.write(f"{guess}\n")
+
+                last_name = name
+
+                print("Score:", player.score)
                 print("Currently have:", len(proxy_pool_singleton.proxies), "proxies")
 
-                if not await player.make_guess(orchestrator, guess.strip()):
-                    raise Exception("Guess failed")
-
-            await player.lose(orchestrator)
             print("Final score:", player.score)
 
-    except:
-        print("Come on!")
-        sys.exit(traceback.print_exc())
+        except:
+            print("Come on!")
+            sys.exit(traceback.print_exc())
 
 
 async def init_app():

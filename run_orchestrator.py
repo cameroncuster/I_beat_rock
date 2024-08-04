@@ -179,6 +179,8 @@ async def background_task():
             print("Starting game...")
             player = Player()
 
+            await player.make_guess(orchestrator, "a clown")
+
             with open("winning_guesses.txt", "r") as f:
                 lines = f.readlines()
 
@@ -194,7 +196,7 @@ async def background_task():
                 last_name = string_to_int(last_name_str)
 
                 if not await player.make_guess(orchestrator, last_guess):
-                    print("A God failed against scissors:", last_guess)
+                    print("Guess failed:", last_guess)
                     raise Exception("Failed to enter the guessing loop")
 
             print("Starting guessing loop...")

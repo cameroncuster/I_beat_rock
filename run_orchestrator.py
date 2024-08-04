@@ -179,9 +179,6 @@ async def background_task():
             print("Starting game...")
             player = Player()
 
-            await player.make_guess(orchestrator, "paper")
-            await player.make_guess(orchestrator, "scissors")
-
             with open("winning_guesses.txt", "r") as f:
                 lines = f.readlines()
 

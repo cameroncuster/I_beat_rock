@@ -147,12 +147,10 @@ class Player:
 
 async def background_task():
     orchestrator = Orchestrator()
+    player = Player()
 
     try:
         print("Starting game...")
-
-        player = Player()
-
         with open("winning_guesses.txt", "r") as f:
             lines = f.readlines()
 

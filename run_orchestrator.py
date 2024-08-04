@@ -5,6 +5,7 @@ import httpx
 import asyncio
 import traceback
 from aiohttp import web
+from collections import deque
 
 target = 13000
 
@@ -87,7 +88,7 @@ class Player:
         data = {
             "gid": self.gid,
             "score": self.score,
-            "text": f"{guess} 🧑 did not beat {self.prev} 🫦",
+            "text": f"{guess} 🤖 did not beat {self.prev} 🤠",
         }
 
         # request is sent directly from the orchestrator, no need to bang the proxies this time...
@@ -161,16 +162,8 @@ async def background_task():
 
     orchestrator = Orchestrator()
 
+    name_q = deque([0, 0])
     bad_names = set()
-
-    prv_name = 0
-    cur_name = 0
-
-    try:
-        with open("bad_names.txt") as f:
-            bad_names = set(f.read().splitlines())
-    except FileNotFoundError:
-        pass
 
     while True:
         try:
@@ -179,6 +172,11 @@ async def background_task():
 
             await player.make_guess(orchestrator, "paper")
             await player.make_guess(orchestrator, "scissors")
+            if name_q[0] != 0:
+                guess = f"a God named '{int_to_string(name_q[0])}' who defeats a God named '{int_to_string(name_q[1])}'"
+                if not await player.make_guess(orchestrator, guess):
+                    print("An allegedly cached guess failed: ", guess)
+                    raise Exception("Cached guess failed")
 
             print("Starting guessing loop...")
             while True:
@@ -187,27 +185,26 @@ async def background_task():
                     await player.lose(orchestrator)
                     break
 
-                cur_name = prv_name + 1
-                while int_to_string(cur_name) in bad_names:
-                    cur_name += 1
+                name = name_q[0] + 1
+                while name in bad_names:
+                    name += 1
 
-                guess = f"a God named '{int_to_string(cur_name)}' who defeats a God named '{int_to_string(prv_name)}'"
+                guess = f"a God named '{int_to_string(name)}' who defeats a God named '{int_to_string(name_q[0])}'"
 
                 if not await player.make_guess(orchestrator, guess):
+                    bad_names.add(name)
                     break
+
+                with open("winning_guesses.txt", "a") as f:
+                    f.write(f"{guess}\n")
+
+                name_q.appendleft(name)
+                name_q.pop()
 
                 print("Score:", player.score)
                 print("Currently have:", len(proxy_pool_singleton.proxies), "proxies")
 
-                prv_name = cur_name
-
             print("Final score:", player.score)
-
-            bad_names.add(int_to_string(cur_name))
-
-            print("Saving bad names...")
-            with open("bad_names.txt", "w") as f:
-                f.write("\n".join(bad_names))
 
         except:
             print("Come on!")

@@ -184,10 +184,16 @@ async def background_task():
 
             with open("winning_guesses.txt", "r") as f:
                 lines = f.readlines()
-                last_guess = lines[-1].strip()
 
-                last_name_str = last_guess.split("'")[1]
+                last_guess = lines[-1].strip()
+                print("Last guess:", last_guess)
+
+                split_guess = last_guess.split("'")
+                print("Split guess:", split_guess)
+
+                last_name_str = split_guess[1]
                 print("Parsing last_name_str:", last_name_str)
+
                 last_name = string_to_int(last_name_str)
 
                 if not await player.make_guess(orchestrator, last_guess):

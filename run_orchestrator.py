@@ -160,9 +160,18 @@ async def background_task():
 
         return "".join(reversed(letters))
 
+    def string_to_int(s):
+        n = 0
+        for c in s:
+            n = n * 26 + ord(c) - 97
+        return n
+
+    # test the helpers
+    for i in range(1000):
+        assert string_to_int(int_to_string(i)) == i
+
     orchestrator = Orchestrator()
 
-    name_q = deque([0, 0])
     bad_names = set()
 
     while True:
@@ -172,11 +181,18 @@ async def background_task():
 
             await player.make_guess(orchestrator, "paper")
             await player.make_guess(orchestrator, "scissors")
-            if name_q[0] != 0:
-                guess = f"a God named '{int_to_string(name_q[0])}' who defeats a God named '{int_to_string(name_q[1])}'"
-                if not await player.make_guess(orchestrator, guess):
-                    print("An allegedly cached guess failed: ", guess)
-                    raise Exception("Cached guess failed")
+
+            with open("winning_guesses.txt", "r") as f:
+                lines = f.readlines()
+                last_guess = lines[-1].strip()
+
+                last_name_str = last_guess.split("'")[1]
+                print("Parsing last_name_str:", last_name_str)
+                last_name = string_to_int(last_name_str)
+
+                if not await player.make_guess(orchestrator, last_guess):
+                    print("A God failed against scissors:", last_guess)
+                    raise Exception("Failed to enter the guessing loop")
 
             print("Starting guessing loop...")
             while True:
@@ -185,11 +201,11 @@ async def background_task():
                     await player.lose(orchestrator)
                     break
 
-                name = name_q[0] + 1
+                name = last_name + 1
                 while name in bad_names:
                     name += 1
 
-                guess = f"a God named '{int_to_string(name)}' who defeats a God named '{int_to_string(name_q[0])}'"
+                guess = f"a God named '{int_to_string(name)}' who defeats a God named '{int_to_string(last_name)}'"
 
                 if not await player.make_guess(orchestrator, guess):
                     bad_names.add(name)
@@ -198,8 +214,7 @@ async def background_task():
                 with open("winning_guesses.txt", "a") as f:
                     f.write(f"{guess}\n")
 
-                name_q.appendleft(name)
-                name_q.pop()
+                last_name = name
 
                 print("Score:", player.score)
                 print("Currently have:", len(proxy_pool_singleton.proxies), "proxies")

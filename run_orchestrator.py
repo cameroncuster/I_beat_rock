@@ -195,7 +195,7 @@ async def background_task():
                     bad_names.add(name)
                     break
 
-                with open("winning_guesses.txt", "a") as f:
+                with open("winning_guesses.txt", "a", buffering=1) as f:
                     f.write(f"{guess}\n")
 
                 name_q.appendleft(name)

@@ -172,8 +172,6 @@ async def background_task():
 
             print("Final score:", player.score)
 
-            sys.exit(0)
-
     except:
         print("Come on!")
         sys.exit(traceback.print_exc())

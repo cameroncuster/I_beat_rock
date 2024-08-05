@@ -6,6 +6,8 @@ import asyncio
 import traceback
 from aiohttp import web
 
+target = 100
+
 
 class ProxyPool:
     def __init__(self):
@@ -150,11 +152,15 @@ async def background_task():
     player = Player()
 
     try:
-        print("Starting game...")
+        print("Starting game with id:", player.gid)
         with open("winning_guesses.txt", "r") as f:
             lines = f.readlines()
 
-            for guess in lines:
+            assert len(lines) > target
+
+            for i in range(target):
+                guess = lines[i]
+
                 print("Score:", player.score, "out of", len(lines))
                 print("Currently have:", len(proxy_pool_singleton.proxies), "proxies")
 

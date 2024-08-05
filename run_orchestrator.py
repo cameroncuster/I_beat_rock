@@ -169,7 +169,10 @@ async def background_task():
                     raise Exception("Guess failed")
 
             await player.lose(orchestrator)
+
             print("Final score:", player.score)
+
+            sys.exit(0)
 
     except:
         print("Come on!")

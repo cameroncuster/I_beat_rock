@@ -156,12 +156,13 @@ async def background_task():
         with open("winning_guesses.txt", "r") as f:
             lines = f.readlines()
 
+            # let's just ensure a strict majority
             assert len(lines) > target
 
             for i in range(target):
                 guess = lines[i]
 
-                print("Score:", player.score, "out of", len(lines))
+                print("Score:", player.score, "with target of", target)
                 print("Currently have:", len(proxy_pool_singleton.proxies), "proxies")
 
                 if not await player.make_guess(orchestrator, guess.strip()):

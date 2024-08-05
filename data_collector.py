@@ -5,9 +5,6 @@ import httpx
 import asyncio
 import traceback
 from aiohttp import web
-from collections import deque
-
-target = 13000
 
 
 class ProxyPool:
@@ -75,38 +72,11 @@ class Orchestrator:
             return None
 
 
-cookie = "Nom nom"
-
-
 class Player:
     def __init__(self):
         self.gid = str(uuid.uuid4())
         self.prev = "rock"
         self.score = 0
-
-    async def save_score(self, orchestrator, guess):
-        data = {
-            "gid": self.gid,
-            "score": self.score,
-            "text": f"{guess} 🤖 did not beat {self.prev} 🤠",
-        }
-
-        # request is sent directly from the orchestrator, no need to bang the proxies this time...
-        try:
-            response = await orchestrator.client.post(
-                url="https://www.whatbeatsrock.com/api/scores",
-                headers={
-                    "Cookie": cookie,
-                    "User-Agent": "CAM",
-                },
-                json=data,
-            )
-
-            response.raise_for_status()
-            return True
-        except Exception as e:
-            print(f"Failed to save score: {e}")
-            return False
 
     async def make_guess(self, orchestrator, guess, max_retries=10):
         data = {"prev": self.prev, "guess": guess, "gid": self.gid}
@@ -130,22 +100,6 @@ class Player:
             return False
 
         return False
-
-    async def lose(self, orchestrator):
-        if not await self.make_guess(
-            orchestrator, "Thanos with a full infinity gauntlet 😈 👻"
-        ):
-            print("Failed to lose")
-            return
-        if await self.make_guess(orchestrator, "camc FTW ;)"):
-            print("We won with: camc FTW ;)")
-            if await self.make_guess(orchestrator, "a useless rock"):
-                # this should never happen
-                print("We won with: a useless rock -- this state should be unreachable")
-            await self.save_score(orchestrator, "a useless rock")
-            return
-        print("Saving score...")
-        await self.save_score(orchestrator, "camc FTW ;)")
 
 
 async def background_task():
@@ -177,6 +131,7 @@ async def background_task():
     while True:
         try:
             print("Starting game...")
+
             player = Player()
 
             await player.make_guess(orchestrator, "a clown")
@@ -201,11 +156,6 @@ async def background_task():
 
             print("Starting guessing loop...")
             while True:
-                if player.score >= target:
-                    print("Score target reached")
-                    await player.lose(orchestrator)
-                    break
-
                 name = last_name + 1
                 while name in bad_names:
                     name += 1
@@ -221,10 +171,8 @@ async def background_task():
 
                 last_name = name
 
-                print("Score:", player.score)
+                print("Guess:", guess)
                 print("Currently have:", len(proxy_pool_singleton.proxies), "proxies")
-
-            print("Final score:", player.score)
 
         except:
             print("Come on!")
@@ -234,7 +182,6 @@ async def background_task():
 async def init_app():
     app = web.Application()
     app.router.add_post("/register", handle_register)
-    app.router.add_post("/cookie", handle_cookie)
 
     app.on_startup.append(start_background_task)
     app.on_cleanup.append(stop_background_task)
@@ -246,18 +193,6 @@ async def handle_register(request):
     proxy_host, _ = request._transport_peername
     proxy_pool_singleton.push_proxy(proxy_host)
     return web.json_response({"status": "success"})
-
-
-async def handle_cookie(request):
-    global cookie
-    data = await request.json()
-    try:
-        cookie = data["Cookie"]
-        print(f"Cookie updated: {cookie}", flush=True)
-        return web.json_response({"status": "success"})
-    except Exception as e:
-        print(f"Failed to update cookie: {e}")
-        return web.json_response({"status": "failed"})
 
 
 async def start_background_task(app):
